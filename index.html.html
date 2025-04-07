@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ড্যাশবোর্ড - EasyLoanBD</title>
+  <style>
+    body {
+      background: #0d1b2a;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    form {
+      background: #1b263b;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #00b4d8;
+      background: #223;
+      color: white;
+    }
+    button {
+      background: #00b4d8;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover {
+      background: #90e0ef;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="stepTitle">ডিপোজিট ফর্ম</h2>
+    
+    <form id="depositForm" onsubmit="handleDeposit(event)">
+      <label>বিকাশ নাম্বার:</label>
+      <input type="text" value="01979448661" readonly onclick="copyNumber(this)" />
+      <small>উপরের নাম্বারে সেন্ড মানি করুন</small>
+      <label>টাকার পরিমাণ (৳):</label>
+      <select id="depositAmount">
+        <option value="500">500</option>
+        <option value="1000">1000</option>
+        <option value="1500">1500</option>
+        <option value="2000">2000</option>
+        <option value="5000">5000</option>
+      </select>
+      <label>লেনদেন নম্বর (TRX ID):</label>
+      <input type="text" id="trxId" required />
+      <button type="submit">সাবমিট ডিপোজিট</button>
+    </form>
+
+    <form id="loanForm" class="hidden" onsubmit="handleLoan(event)">
+      <label>লোন পরিমাণ (৳):</label>
+      <input type="number" id="loanAmount" required />
+      <label>মেয়াদ (মাস):</label>
+      <select id="duration">
+        <option value="3">3</option>
+        <option value="6">6</option>
+        <option value="9">9</option>
+        <option value="12">12</option>
+      </select>
+      <label>2% সুদ সহ মোট ফেরতযোগ্য (৳):</label>
+      <input type="text" id="totalPayable" readonly />
+      <button type="submit">আবেদন করুন</button>
+    </form>
+  </div>
+
+  <script>
+    function copyNumber(input) {
+      navigator.clipboard.writeText(input.value);
+      alert("নাম্বার কপি হয়েছে");
+    }
+
+    function handleDeposit(e) {
+      e.preventDefault();
+      const amount = parseInt(document.getElementById("depositAmount").value);
+      const trxId = document.getElementById("trxId").value;
+
+      if (!trxId) return alert("TRX ID লিখুন");
+
+      localStorage.setItem("deposit", JSON.stringify({ amount, trxId }));
+
+      document.getElementById("depositForm").classList.add("hidden");
+      document.getElementById("loanForm").classList.remove("hidden");
+      document.getElementById("stepTitle").innerText = "লোন ফর্ম";
+    }
+
+    function handleLoan(e) {
+      e.preventDefault();
+      const depositData = JSON.parse(localStorage.getItem("deposit"));
+      const loanAmount = parseInt(document.getElementById("loanAmount").value);
+      const duration = parseInt(document.getElementById("duration").value);
+
+      if (!depositData || loanAmount > depositData.amount * 10) {
+        alert("আপনার ডিপোজিট অনুযায়ী এই পরিমাণ লোন নেওয়া যাবে না");
+        return;
+      }
+
+      const interest = loanAmount * 0.02 * duration;
+      const total = loanAmount + interest;
+
+      document.getElementById("totalPayable").value = total + " ৳";
+
+      alert("লোন আবেদন সফল হয়েছে! আপনি ড্যাশবোর্ডে ফিরে যাচ্ছেন।");
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 1500);
+    }
+
+    document.getElementById("loanAmount").addEventListener("input", updateTotal);
+    document.getElementById("duration").addEventListener("change", updateTotal);
+
+    function updateTotal() {
+      const amount = parseInt(document.getElementById("loanAmount").value || 0);
+      const months = parseInt(document.getElementById("duration").value);
+      const interest = amount * 0.02 * months;
+      document.getElementById("totalPayable").value = (amount + interest) + " ৳";
+    }
+  </script>
+</body>
+</html>
